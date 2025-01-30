@@ -18,6 +18,9 @@
 #define WAIST_SERVO_DEFAULT_DEGREE 90
 #define WAIST_SERVO_UP_DEGREE 80
 
+#define EYE_BRIGHT_NORMAL 31
+#define EYE_BRIGHT_MAX 255
+
 ServoEasing tableServo;
 Servo waistServo;
 
@@ -31,6 +34,7 @@ void setup() {
   ESP_LOGI(MAIN_TAG, "Setup Mono-eye");
   ledcSetup(CH_EYE, 1000, 8);
   ledcAttachPin(PIN_EYE, CH_EYE);
+  ledcWrite(CH_EYE, EYE_BRIGHT_NORMAL);
 
   ESP_LOGI(MAIN_TAG, "Setup Bazuka");
   ledcSetup(CH_BAZUKA, 1000, 8);
@@ -66,10 +70,15 @@ void loop() {
     return;
   }
   if (now - lastChecked > 1000 * 3) {
+    ledcWrite(CH_BACKPACK, 195);
+    ledcWrite(CH_FOOT, 195);
+
     int right = random(0, 90);
     uint_fast16_t speed1 = random(30, 60);
     ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", right, speed1);
     tableServo.easeTo(right, speed1);
+    ledcWrite(CH_BACKPACK, 0);
+    ledcWrite(CH_FOOT, 0);
 
     if (random(0, 2) == 0) {
       delay(2000);
@@ -78,10 +87,15 @@ void loop() {
       delay(1000);
     }
 
+    ledcWrite(CH_BACKPACK, 195);
+    ledcWrite(CH_FOOT, 195);
+
     int left = random(90, 180);
     uint_fast16_t speed2 = random(30, 60);
     ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", left, speed2);
     tableServo.easeTo(left, speed2);
+    ledcWrite(CH_BACKPACK, 0);
+    ledcWrite(CH_FOOT, 0);
 
     if (random(0, 2) == 0) {
       delay(2000);
@@ -98,8 +112,15 @@ void loop() {
 
 void fire() {
   ESP_LOGI(MAIN_TAG, "Fire!");
+  ledcWrite(CH_EYE, EYE_BRIGHT_MAX);
+  delay(1500);
+  ledcWrite(CH_EYE, EYE_BRIGHT_NORMAL);
+  delay(1000);
+
+  ledcWrite(CH_BAZUKA, 255);
   playBazuka();
   delay(500);
+  ledcWrite(CH_BAZUKA, 0);
   waistServo.write(WAIST_SERVO_UP_DEGREE);
   delay(200);
   waistServo.write(WAIST_SERVO_DEFAULT_DEGREE);
