@@ -4,7 +4,7 @@
 #include "controllers/Mp3Controller.h"
 
 #define MAX_EASING_SERVOS 1
-//#define DISABLE_COMPLEX_FUNCTIONS
+// #define DISABLE_COMPLEX_FUNCTIONS
 #define ENABLE_EASE_ELASTIC
 #define DISABLE_MICROS_AS_DEGREE_PARAMETER
 #define ENABLE_EASE_PRECISION
@@ -48,7 +48,7 @@ void setup() {
 
   ESP_LOGI(MAIN_TAG, "Setup Table-servo");
   tableServo.attach(PIN_SERVO_TABLE, TABLE_SERVO_DEFAULT_DEGREE);
-//  tableServo.setEasingType(EASE_ELASTIC_IN_OUT);
+  //  tableServo.setEasingType(EASE_ELASTIC_IN_OUT);
 
   ESP_LOGI(MAIN_TAG, "Setup Waist-servo");
   waistServo.attach(PIN_SERVO_WAIST);
@@ -70,20 +70,24 @@ void loop() {
     uint_fast16_t speed1 = random(30, 60);
     ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", right, speed1);
     tableServo.easeTo(right, speed1);
-    delay(1000);
 
     if (random(0, 2) == 0) {
+      delay(2000);
       fire();
+    } else {
+      delay(1000);
     }
 
     int left = random(90, 180);
     uint_fast16_t speed2 = random(30, 60);
     ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", left, speed2);
     tableServo.easeTo(left, speed2);
-    delay(1000);
 
     if (random(0, 2) == 0) {
+      delay(2000);
       fire();
+    } else {
+      delay(1000);
     }
 
     lastChecked = millis();
