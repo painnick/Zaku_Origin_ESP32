@@ -16,14 +16,15 @@
 #define TABLE_SERVO_DEFAULT_DEGREE 90
 
 #define WAIST_SERVO_DEFAULT_DEGREE 90
-#define WAIST_SERVO_UP_DEGREE 80
+#define WAIST_SERVO_UP_DEGREE 75
 
-#define EYE_BRIGHT_NORMAL 31
+#define EYE_BRIGHT_NORMAL 23
 #define EYE_BRIGHT_MAX 255
 
 ServoEasing tableServo;
 Servo waistServo;
 
+void move(long min, long max);
 void fire();
 
 void setup() {
@@ -61,67 +62,52 @@ void setup() {
   delay(3000);
 }
 
-unsigned long lastChecked = 0;
-
 void loop() {
-  const unsigned long now = millis();
-  if (lastChecked == 0) {
-    lastChecked = now;
-    return;
-  }
-  if (now - lastChecked > 1000 * 3) {
-    ledcWrite(CH_BACKPACK, 195);
-    ledcWrite(CH_FOOT, 195);
-
-    int right = random(0, 90);
-    uint_fast16_t speed1 = random(30, 60);
-    ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", right, speed1);
-    tableServo.easeTo(right, speed1);
-    ledcWrite(CH_BACKPACK, 0);
-    ledcWrite(CH_FOOT, 0);
-
-    if (random(0, 2) == 0) {
-      delay(2000);
-      fire();
-    } else {
-      delay(1000);
-    }
-
-    ledcWrite(CH_BACKPACK, 195);
-    ledcWrite(CH_FOOT, 195);
-
-    int left = random(90, 180);
-    uint_fast16_t speed2 = random(30, 60);
-    ESP_LOGI(MAIN_TAG, "Move to %d(spd %d)", left, speed2);
-    tableServo.easeTo(left, speed2);
-    ledcWrite(CH_BACKPACK, 0);
-    ledcWrite(CH_FOOT, 0);
-
-    if (random(0, 2) == 0) {
-      delay(2000);
-      fire();
-    } else {
-      delay(1000);
-    }
-
-    lastChecked = millis();
-  }
-
+  move(0, 90);
   dfmp3.loop();
+  delay(random(200, 2000));
+
+  move(91, 180);
+  delay(random(200, 2000));
+  dfmp3.loop();
+}
+
+void move(long min, long max) {
+  ledcWrite(CH_BACKPACK, 195);
+  ledcWrite(CH_FOOT, 195);
+  delay(500);
+
+  int degree = random(min, max);
+  uint_fast16_t speed = random(30, 60);
+  ESP_LOGD(MAIN_TAG, "Move to %d(spd %d)", degree, speed);
+  tableServo.easeTo(degree, speed);
+  ledcWrite(CH_BACKPACK, 0);
+  ledcWrite(CH_FOOT, 0);
+
+  if (random(0, 3) != 0) {
+    delay(random(300, 1000));
+    fire();
+  }
 }
 
 void fire() {
   ESP_LOGI(MAIN_TAG, "Fire!");
   ledcWrite(CH_EYE, EYE_BRIGHT_MAX);
-  delay(1500);
+  delay(400);
+  ledcWrite(CH_EYE, (EYE_BRIGHT_MAX + EYE_BRIGHT_NORMAL) / 2);
+  delay(100);
+  ledcWrite(CH_EYE, (EYE_BRIGHT_MAX + EYE_BRIGHT_NORMAL) / 4);
+  delay(100);
   ledcWrite(CH_EYE, EYE_BRIGHT_NORMAL);
-  delay(1000);
+  delay(700);
+
+  playBazuka();
+  delay(400);
 
   ledcWrite(CH_BAZUKA, 255);
-  playBazuka();
-  delay(500);
-  ledcWrite(CH_BAZUKA, 0);
+
   waistServo.write(WAIST_SERVO_UP_DEGREE);
   delay(200);
+  ledcWrite(CH_BAZUKA, 0);
   waistServo.write(WAIST_SERVO_DEFAULT_DEGREE);
 }
