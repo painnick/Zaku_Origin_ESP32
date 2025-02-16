@@ -4,8 +4,8 @@
 #include "controllers/Mp3Controller.h"
 
 #define MAX_EASING_SERVOS 2
-#define DISABLE_COMPLEX_FUNCTIONS
-#define ENABLE_EASE_ELASTIC
+//#define DISABLE_COMPLEX_FUNCTIONS
+//#define ENABLE_EASE_ELASTIC
 #define DISABLE_MICROS_AS_DEGREE_PARAMETER
 
 #include <ServoEasing.hpp>
@@ -22,7 +22,9 @@
 
 ServoEasing tableServo, waistServo;
 
-void move(long min, long max);
+int lastTableDegree = TABLE_SERVO_DEFAULT_DEGREE;
+
+int move();
 
 void fire();
 
@@ -60,22 +62,29 @@ void setup() {
 }
 
 void loop() {
-  move(0, 90);
-  dfmp3.loop();
-  delay(random(200, 2000));
-
-  move(91, 180);
-  delay(random(200, 2000));
+  int diff = move();
+  delay(min(diff * diff, 1000));
   dfmp3.loop();
 }
 
-void move(long min, long max) {
+int move() {
+  int diff = 0;
+
   ledcWrite(CH_BACKPACK, 195);
   ledcWrite(CH_FOOT, 195);
   delay(500);
 
-  int degree = random(min, max);
-  uint_fast16_t speed = random(30, 45);
+  int degree;
+  while (true) {
+    degree = random(0, 180);
+    diff = abs(lastTableDegree - degree);
+    if (diff > 30) {
+      lastTableDegree = degree;
+      break;
+    }
+  }
+
+  uint_fast16_t speed = random(15, 30);
   ESP_LOGD(MAIN_TAG, "Move to %d(spd %d)", degree, speed);
   tableServo.easeTo(degree, speed);
   ledcWrite(CH_BACKPACK, 0);
@@ -85,6 +94,8 @@ void move(long min, long max) {
     delay(random(300, 1000));
     fire();
   }
+
+  return diff;
 }
 
 void fire() {
