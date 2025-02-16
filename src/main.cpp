@@ -3,11 +3,10 @@
 #include "common.h"
 #include "controllers/Mp3Controller.h"
 
-#define MAX_EASING_SERVOS 1
-// #define DISABLE_COMPLEX_FUNCTIONS
+#define MAX_EASING_SERVOS 2
+#define DISABLE_COMPLEX_FUNCTIONS
 #define ENABLE_EASE_ELASTIC
 #define DISABLE_MICROS_AS_DEGREE_PARAMETER
-#define ENABLE_EASE_PRECISION
 
 #include <ServoEasing.hpp>
 
@@ -21,10 +20,10 @@
 #define EYE_BRIGHT_NORMAL 23
 #define EYE_BRIGHT_MAX 255
 
-ServoEasing tableServo;
-Servo waistServo;
+ServoEasing tableServo, waistServo;
 
 void move(long min, long max);
+
 void fire();
 
 void setup() {
@@ -38,8 +37,7 @@ void setup() {
   ledcWrite(CH_EYE, EYE_BRIGHT_NORMAL);
 
   ESP_LOGI(MAIN_TAG, "Setup Bazuka");
-  ledcSetup(CH_BAZUKA, 1000, 8);
-  ledcAttachPin(PIN_BAZUKA, CH_BAZUKA);
+  pinMode(PIN_BAZUKA, OUTPUT);
 
   ESP_LOGI(MAIN_TAG, "Setup backpack");
   ledcSetup(CH_BACKPACK, 1000, 8);
@@ -53,11 +51,10 @@ void setup() {
 
   ESP_LOGI(MAIN_TAG, "Setup Table-servo");
   tableServo.attach(PIN_SERVO_TABLE, TABLE_SERVO_DEFAULT_DEGREE);
-  //  tableServo.setEasingType(EASE_ELASTIC_IN_OUT);
+  tableServo.setEasingType(EASE_ELASTIC_IN_OUT);
 
   ESP_LOGI(MAIN_TAG, "Setup Waist-servo");
-  waistServo.attach(PIN_SERVO_WAIST);
-  waistServo.write(WAIST_SERVO_DEFAULT_DEGREE);
+  waistServo.attach(PIN_SERVO_WAIST, WAIST_SERVO_DEFAULT_DEGREE);
 
   delay(3000);
 }
@@ -78,7 +75,7 @@ void move(long min, long max) {
   delay(500);
 
   int degree = random(min, max);
-  uint_fast16_t speed = random(30, 60);
+  uint_fast16_t speed = random(30, 45);
   ESP_LOGD(MAIN_TAG, "Move to %d(spd %d)", degree, speed);
   tableServo.easeTo(degree, speed);
   ledcWrite(CH_BACKPACK, 0);
@@ -102,12 +99,12 @@ void fire() {
   delay(700);
 
   playBazuka();
-  delay(400);
+  delay(300);
 
-  ledcWrite(CH_BAZUKA, 255);
+  digitalWrite(PIN_BAZUKA, HIGH);
 
-  waistServo.write(WAIST_SERVO_UP_DEGREE);
+  waistServo.easeTo(WAIST_SERVO_UP_DEGREE, 180);
   delay(200);
-  ledcWrite(CH_BAZUKA, 0);
-  waistServo.write(WAIST_SERVO_DEFAULT_DEGREE);
+  digitalWrite(PIN_BAZUKA, LOW);
+  waistServo.easeTo(WAIST_SERVO_DEFAULT_DEGREE, 180);
 }
